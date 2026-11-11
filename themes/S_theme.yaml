@@ -11,6 +11,7 @@ S_theme:
   theme-green: "#22c55e"
   theme-red: "#ef4444"
   theme-purple: "#8b5cf6"
+  theme-white: "#e2e8f0"
 
   # ===== Couleurs principales =====
   primary-color: "var(--theme-blue)"
@@ -66,3 +67,31 @@ S_theme:
       opacity: 1;
     }
     {% endif %}
+
+    /* ===== Tempo ===== */
+    :host(.tempo) ha-card {
+      {% if is_state(config.entity, 'Bleu') %}
+        --tempo-color: var(--theme-blue);
+      {% elif is_state(config.entity, 'Blanc') %}
+        --tempo-color: var(--theme-white);
+      {% elif is_state(config.entity, 'Rouge') %}
+        --tempo-color: var(--theme-red);
+      {% else %}
+        --tempo-color: transparent;
+      {% endif %}
+      --tile-color: var(--tempo-color) !important;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: color-mix(in srgb, var(--tempo-color) 50%, transparent);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--tempo-color) 25%, transparent);
+    }
+    :host(.tempo) ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(145deg,
+        color-mix(in srgb, var(--tempo-color) 35%, transparent),
+        transparent 70%);
+    }
