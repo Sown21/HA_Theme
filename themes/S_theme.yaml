@@ -7,6 +7,7 @@ S_theme:
 
   theme-blue: "#3b82f6"
   theme-orange: "#f59e0b"
+  theme-yellow: "#ffce00"
   theme-green: "#22c55e"
   theme-red: "#ef4444"
   theme-purple: "#8b5cf6"
@@ -31,10 +32,37 @@ S_theme:
   ha-card-border-color: "var(--theme-border)"
   ha-card-box-shadow: "none"
 
+  # ===== Couleurs d'état =====
+  state-switch-active-color: "var(--theme-yellow)"
+
   # ===== card-mod =====
   card-mod-theme: S_theme
 
   card-mod-card: |
-    :host(.test) ha-card {
-      border: 2px solid red;
+    /* ===== Prise ===== */
+    :host(.prise) ha-card {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      transition: border-color 0.6s ease, box-shadow 0.6s ease;
     }
+    :host(.prise) ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(145deg,
+        color-mix(in srgb, var(--theme-yellow) 35%, transparent),
+        transparent 70%);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    {% if is_state(config.entity, 'on') %}
+    :host(.prise) ha-card {
+      border-color: color-mix(in srgb, var(--theme-yellow) 50%, transparent);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--theme-yellow) 25%, transparent);
+    }
+    :host(.prise) ha-card::before {
+      opacity: 1;
+    }
+    {% endif %}
