@@ -30,3 +30,11 @@ S_theme:
   ha-card-border-width: "1px"
   ha-card-border-color: "var(--theme-border)"
   ha-card-box-shadow: "none"
+
+  # ===== card-mod =====
+  card-mod-theme: S_theme
+
+  card-mod-card: |
+    :host(.test) ha-card {
+      border: 2px solid red;
+    }
