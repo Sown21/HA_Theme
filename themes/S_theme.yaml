@@ -98,3 +98,110 @@ S_theme:
         color-mix(in srgb, var(--tempo-color) 35%, transparent),
         transparent 70%);
     }
+
+    /* ===== Météo ===== */
+    {% set meteo = states(config.entity) if config.entity else '' %}
+    :host(.meteo) ha-card {
+      {% if meteo == 'sunny' %}
+        --meteo-color: var(--theme-yellow);
+      {% elif meteo == 'clear-night' %}
+        --meteo-color: var(--theme-purple);
+      {% elif meteo == 'partlycloudy' %}
+        --meteo-color: var(--theme-orange);
+      {% elif meteo in ['cloudy', 'fog', 'windy', 'windy-variant'] %}
+        --meteo-color: #64748b;
+      {% elif meteo in ['rainy', 'pouring', 'hail'] %}
+        --meteo-color: var(--theme-blue);
+      {% elif meteo in ['lightning', 'lightning-rainy'] %}
+        --meteo-color: var(--theme-purple);
+      {% elif meteo in ['snowy', 'snowy-rainy'] %}
+        --meteo-color: var(--theme-white);
+      {% else %}
+        --meteo-color: transparent;
+      {% endif %}
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: color-mix(in srgb, var(--meteo-color) 40%, transparent);
+    }
+    :host(.meteo) ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(160deg,
+        color-mix(in srgb, var(--meteo-color) 40%, transparent),
+        transparent 75%);
+    }
+
+    /* ===== Météo : animations ===== */
+    @keyframes meteo-halo {
+      0%, 100% { transform: scale(1);    opacity: 0.6; }
+      50%      { transform: scale(1.15); opacity: 1; }
+    }
+    @keyframes meteo-drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes meteo-wind {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(100%); }
+    }
+
+    {% if meteo in ['sunny', 'clear-night', 'partlycloudy'] %}
+    /* Soleil / nuit claire / éclaircies : halo */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: -60px;
+      right: -60px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        color-mix(in srgb, var(--meteo-color) 45%, transparent),
+        transparent 70%);
+      animation: meteo-halo 6s ease-in-out infinite;
+    }
+    {% elif meteo in ['cloudy', 'fog'] %}
+    /* Couvert / brouillard : nuages qui défilent */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 100%;
+      background:
+        radial-gradient(ellipse 30% 40% at 25% 30%, rgba(255, 255, 255, 0.18), transparent 70%),
+        radial-gradient(ellipse 25% 35% at 75% 65%, rgba(255, 255, 255, 0.14), transparent 70%);
+      background-size: 50% 100%;
+      background-repeat: repeat-x;
+      filter: blur(4px);
+      animation: meteo-drift 20s linear infinite;
+    }
+    {% elif meteo in ['windy', 'windy-variant'] %}
+    /* Vent : rafales */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent) 10% 25% / 45% 2px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent) 60% 50% / 35% 1px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.30), transparent) 25% 75% / 40% 2px no-repeat;
+      animation: meteo-wind 2.5s linear infinite;
+    }
+    {% endif %}
+
+    @media (prefers-reduced-motion: reduce) {
+      :host(.meteo) ha-card::after {
+        animation: none;
+      }
+    }
