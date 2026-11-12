@@ -182,6 +182,35 @@ S_theme:
         var(--ha-card-background, var(--card-background-color));
       transition: border-color 1s ease;
     }
+    /* Hauteur pilotée par grid_options → rows (vue Sections) :
+       la card remplit sa case, l'en-tête garde sa taille,
+       et la courbe s'étire ou se tasse pour occuper le reste. */
+    :host(.climat) {
+      height: 100%;
+    }
+    :host(.climat) ha-card {
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    :host(.climat) .graph {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    :host(.climat) .graph__container,
+    :host(.climat) .graph__container__svg {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+    }
+    :host(.climat) .graph__container__svg svg {
+      height: 100%;
+      width: 100%;
+    }
     /* Icône du thermomètre assortie à la teinte
        (mini-graph-card l'affiche semi-transparente : on remet opacity à 1) */
     :host(.climat) .icon,
