@@ -17,14 +17,17 @@ S_theme:
   primary-color: "var(--theme-blue)"
   accent-color: "var(--theme-orange)"
 
-  # ===== Fonds =====
-  primary-background-color: "var(--theme-bg)"
-  secondary-background-color: "var(--theme-card-bottom)"
-  card-background-color: "var(--theme-card-bottom)"
+  # ===== Mode sombre =====
+  modes:
+    dark:
+      # Fonds
+      primary-background-color: "var(--theme-bg)"
+      secondary-background-color: "var(--theme-card-bottom)"
+      card-background-color: "var(--theme-card-bottom)"
 
-  # ===== Textes =====
-  primary-text-color: "#e6edf7"
-  secondary-text-color: "#8b9bb4"
+      # Textes
+      primary-text-color: "#e6edf7"
+      secondary-text-color: "#8b9bb4"
 
   # ===== Cards =====
   ha-card-background: "linear-gradient(145deg, var(--theme-card-top), var(--theme-card-bottom))"
