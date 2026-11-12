@@ -105,6 +105,11 @@ S_theme:
     }
 
     /* ===== Tempo : jours restants (bar-card) ===== */
+    /* Barre centrée verticalement sur le nom et la valeur.
+       (align-items sur bar-card-card est sans effet : bar-card l'impose) */
+    :host(.tempo-jours) bar-card-background {
+      align-self: center;
+    }
     /* Nom à largeur fixe : toutes les barres démarrent au même endroit */
     :host(.tempo-jours) bar-card-name {
       flex: 0 0 3.5em;

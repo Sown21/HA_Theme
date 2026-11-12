@@ -4,8 +4,10 @@
 
 type: custom:bar-card
 title: Jours restants
-height: 22px
+height: 14px
 direction: right
+grid_options:
+  columns: 6
 positions:
   icon: "off"
   indicator: "off"
