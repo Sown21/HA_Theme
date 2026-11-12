@@ -12,6 +12,7 @@ S_theme:
   theme-red: "#ef4444"
   theme-purple: "#8b5cf6"
   theme-white: "#e2e8f0"
+  theme-cyan: "#22d3ee"
 
   # ===== Couleurs principales =====
   primary-color: "var(--theme-blue)"
@@ -149,6 +150,59 @@ S_theme:
       :host(.tempo-jours) bar-card-currentbar {
         animation: none;
       }
+    }
+
+    /* ===== Climat (température / humidité, mini-graph-card) ===== */
+    {# mini-graph-card n'a pas d'"entity" mais une liste "entities" :
+       on lit la 1re entité de la liste (la température), qu'elle soit
+       écrite en texte simple ou sous forme "- entity: ...". #}
+    {% set ents = config.entities if config.entities is defined and config.entities else [] %}
+    {% set ent1 = ents[0] if ents else '' %}
+    {% set ent1 = ent1.entity if ent1 is mapping else ent1 %}
+    {% set temp = states(ent1) | float(none) if ent1 else none %}
+    :host(.climat) ha-card {
+      {% if temp is none %}
+        --climat-color: transparent;
+      {% elif temp < 18 %}
+        --climat-color: var(--theme-blue);
+      {% elif temp < 20 %}
+        --climat-color: var(--theme-cyan);
+      {% elif temp < 24 %}
+        --climat-color: var(--theme-green);
+      {% elif temp < 27 %}
+        --climat-color: var(--theme-orange);
+      {% else %}
+        --climat-color: var(--theme-red);
+      {% endif %}
+      border-color: color-mix(in srgb, var(--climat-color) 40%, transparent);
+      background:
+        linear-gradient(160deg,
+          color-mix(in srgb, var(--climat-color) 30%, transparent),
+          transparent 70%),
+        var(--ha-card-background, var(--card-background-color));
+      transition: border-color 1s ease;
+    }
+    /* Icône du thermomètre assortie à la teinte
+       (mini-graph-card l'affiche semi-transparente : on remet opacity à 1) */
+    :host(.climat) .icon,
+    :host(.climat) .icon ha-icon {
+      --paper-item-icon-color: var(--climat-color);
+      --state-icon-color: var(--climat-color);
+      color: var(--climat-color);
+      opacity: 1;
+    }
+    /* Textes : même hiérarchie que les autres cards
+       (nom et valeur en blanc, unité et humidité en gris secondaire) */
+    :host(.climat) .name,
+    :host(.climat) .name span,
+    :host(.climat) .state__value {
+      color: var(--primary-text-color);
+      opacity: 1;
+    }
+    :host(.climat) .state__uom,
+    :host(.climat) .states--secondary {
+      color: var(--secondary-text-color);
+      opacity: 1;
     }
 
     /* ===== Météo ===== */

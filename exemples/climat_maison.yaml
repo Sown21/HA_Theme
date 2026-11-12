@@ -1,0 +1,44 @@
+# Card "Climat" (température + humidité + courbe 24 h)
+# Nécessite : mini-graph-card (HACS)
+# La 1re entité DOIT être la température : le thème s'en sert pour la teinte.
+# Les couleurs de la courbe reprennent les seuils du thème (classe climat) :
+#   < 18 bleu | 18-20 cyan | 20-24 vert | 24-27 orange | >= 27 rouge
+# (mini-graph-card ne comprend pas var(--theme-…) ici, d'où les codes couleur)
+
+type: custom:mini-graph-card
+name: Maison
+icon: mdi:thermometer
+entities:
+  - entity: sensor.temperature_maison_temperature
+    name: Température
+  - entity: sensor.temperature_maison_humidite
+    name: Humidité
+    show_graph: false
+    show_state: true
+hours_to_show: 24
+points_per_hour: 2
+line_width: 2
+font_size: 70
+animate: true
+show:
+  name: true
+  icon: true
+  state: true
+  legend: false
+  labels: false
+  points: false
+  fill: fade
+color_thresholds:
+  - value: 0
+    color: "#3b82f6"
+  - value: 18
+    color: "#22d3ee"
+  - value: 20
+    color: "#22c55e"
+  - value: 24
+    color: "#f59e0b"
+  - value: 27
+    color: "#ef4444"
+color_thresholds_transition: smooth
+card_mod:
+  class: climat
