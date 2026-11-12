@@ -114,12 +114,41 @@ S_theme:
     :host(.tempo-jours) bar-card-name {
       flex: 0 0 3.5em;
       width: 3.5em;
+      color: var(--secondary-text-color);
     }
     /* Valeur à largeur fixe, alignée à droite : les barres finissent au même endroit */
     :host(.tempo-jours) bar-card-value {
       flex: 0 0 2.5em;
       width: 2.5em;
       text-align: right;
+      font-weight: 600;
+    }
+    /* Piste de fond : neutre et discrète, comme les bordures du thème */
+    :host(.tempo-jours) bar-card-backgroundbar {
+      background: rgba(255, 255, 255, 0.06);
+      opacity: 1;
+      filter: none;
+      border-radius: 999px;
+    }
+    /* Barre remplie : raccourcie (au lieu d'être coupée) pour avoir
+       un bout arrondi et une lueur visible. --bar-color et --bar-percent
+       sont fournis par bar-card pour chaque ligne. */
+    @keyframes tempo-fill {
+      from { width: 0; }
+    }
+    :host(.tempo-jours) bar-card-currentbar {
+      width: var(--bar-percent);
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--bar-color) 35%, transparent),
+        var(--bar-color));
+      border-radius: 999px;
+      box-shadow: 0 0 10px color-mix(in srgb, var(--bar-color) 45%, transparent);
+      animation: tempo-fill 1.2s ease-out;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      :host(.tempo-jours) bar-card-currentbar {
+        animation: none;
+      }
     }
 
     /* ===== Météo ===== */
