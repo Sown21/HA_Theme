@@ -43,6 +43,11 @@ S_theme:
   card-mod-theme: S_theme
 
   card-mod-card: |
+    {# État de l'entité de la card, lu une seule fois.
+       Vide si la card n'a pas d'"entity" (bar-card, grid, entities…) :
+       sans cette précaution, le template plante et AUCUN style n'est appliqué. #}
+    {% set etat = states(config.entity) if config.entity is defined and config.entity else '' %}
+
     /* ===== Prise ===== */
     :host(.prise) ha-card {
       position: relative;
@@ -61,7 +66,7 @@ S_theme:
       opacity: 0;
       transition: opacity 0.6s ease;
     }
-    {% if is_state(config.entity, 'on') %}
+    {% if etat == 'on' %}
     :host(.prise) ha-card {
       border-color: color-mix(in srgb, var(--theme-yellow) 50%, transparent);
       box-shadow: 0 0 20px color-mix(in srgb, var(--theme-yellow) 25%, transparent);
@@ -73,11 +78,11 @@ S_theme:
 
     /* ===== Tempo ===== */
     :host(.tempo) ha-card {
-      {% if is_state(config.entity, 'Bleu') %}
+      {% if etat == 'Bleu' %}
         --tempo-color: var(--theme-blue);
-      {% elif is_state(config.entity, 'Blanc') %}
+      {% elif etat == 'Blanc' %}
         --tempo-color: var(--theme-white);
-      {% elif is_state(config.entity, 'Rouge') %}
+      {% elif etat == 'Rouge' %}
         --tempo-color: var(--theme-red);
       {% else %}
         --tempo-color: transparent;
@@ -99,8 +104,21 @@ S_theme:
         transparent 70%);
     }
 
+    /* ===== Tempo : jours restants (bar-card) ===== */
+    /* Nom à largeur fixe : toutes les barres démarrent au même endroit */
+    :host(.tempo-jours) bar-card-name {
+      flex: 0 0 3.5em;
+      width: 3.5em;
+    }
+    /* Valeur à largeur fixe, alignée à droite : les barres finissent au même endroit */
+    :host(.tempo-jours) bar-card-value {
+      flex: 0 0 2.5em;
+      width: 2.5em;
+      text-align: right;
+    }
+
     /* ===== Météo ===== */
-    {% set meteo = states(config.entity) if config.entity else '' %}
+    {% set meteo = etat %}
     :host(.meteo) ha-card {
       {% if meteo == 'sunny' %}
         --meteo-color: var(--theme-yellow);

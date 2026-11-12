@@ -1,0 +1,29 @@
+# Card "Jours restants Tempo" — à coller dans l'éditeur de code d'une card
+# Nécessite : bar-card (HACS)
+# Maximums d'une saison Tempo : 300 bleus, 43 blancs, 22 rouges
+
+type: custom:bar-card
+title: Jours restants
+height: 22px
+direction: right
+positions:
+  icon: "off"
+  indicator: "off"
+  name: outside
+  value: outside
+  minmax: "off"
+entities:
+  - entity: sensor.rte_tempo_cycle_jours_restants_bleu
+    name: Bleu
+    max: 300
+    color: var(--theme-blue)
+  - entity: sensor.rte_tempo_cycle_jours_restants_blanc
+    name: Blanc
+    max: 43
+    color: var(--theme-white)
+  - entity: sensor.rte_tempo_cycle_jours_restants_rouge
+    name: Rouge
+    max: 22
+    color: var(--theme-red)
+card_mod:
+  class: tempo-jours
