@@ -123,15 +123,13 @@ S_theme:
       isolation: isolate;
       overflow: hidden;
       border-color: color-mix(in srgb, var(--meteo-color) 40%, transparent);
-    }
-    :host(.meteo) ha-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      background: linear-gradient(160deg,
-        color-mix(in srgb, var(--meteo-color) 40%, transparent),
-        transparent 75%);
+      /* Teinte météo posée par-dessus le dégradé de base de la card.
+         (::before reste ainsi libre pour l'éclair) */
+      background:
+        linear-gradient(160deg,
+          color-mix(in srgb, var(--meteo-color) 40%, transparent),
+          transparent 75%),
+        var(--ha-card-background, var(--card-background-color));
     }
 
     /* ===== Météo : animations ===== */
@@ -146,6 +144,29 @@ S_theme:
     @keyframes meteo-wind {
       from { transform: translateX(-100%); }
       to   { transform: translateX(100%); }
+    }
+    @keyframes meteo-rain {
+      from { background-position: 0 0, 18px 30px; }
+      to   { background-position: 0 70px, 18px 120px; }
+    }
+    @keyframes meteo-snow {
+      from { background-position: 0 0, 20px 15px; }
+      to   { background-position: 0 40px, 20px 82px; }
+    }
+    @keyframes meteo-flash {
+      0%, 88%, 91%, 94%, 100% { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0); }
+      89%                     { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25); }
+      92.5%                   { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.15); }
+    }
+    /* Éclair : se dessine de haut en bas pendant le 1er flash (88-89 %),
+       scintille avec le 2e flash (92.5 %), puis disparaît. */
+    @keyframes meteo-bolt {
+      0%, 87.9% { opacity: 0; clip-path: inset(0 0 100% 0); }
+      88%       { opacity: 1; clip-path: inset(0 0 100% 0); }
+      89%       { opacity: 1; clip-path: inset(0 0 0 0); }
+      91%       { opacity: 0.2; clip-path: inset(0 0 0 0); }
+      92.5%     { opacity: 1; clip-path: inset(0 0 0 0); }
+      94%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
     }
 
     {% if meteo in ['sunny', 'clear-night', 'partlycloudy'] %}
@@ -200,7 +221,64 @@ S_theme:
     }
     {% endif %}
 
+    {% if meteo in ['rainy', 'pouring', 'hail', 'lightning-rainy'] %}
+    /* Pluie : gouttes qui tombent (2 couches pour la profondeur) */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      inset: -10%;
+      transform: skewX(-12deg);
+      background:
+        radial-gradient(1px 8px at 50% 50%, rgba(255, 255, 255, 0.40), transparent),
+        radial-gradient(1px 6px at 50% 50%, rgba(255, 255, 255, 0.25), transparent);
+      background-size: 37px 70px, 53px 90px;
+      background-position: 0 0, 18px 30px;
+      animation: meteo-rain {{ '0.4s' if meteo == 'pouring' else '0.7s' }} linear infinite;
+    }
+    {% elif meteo in ['snowy', 'snowy-rainy'] %}
+    /* Neige : flocons qui descendent lentement */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      inset: 0;
+      background:
+        radial-gradient(circle 2px at 50% 50%, rgba(255, 255, 255, 0.70), transparent),
+        radial-gradient(circle 1.5px at 50% 50%, rgba(255, 255, 255, 0.45), transparent);
+      background-size: 40px 40px, 67px 67px;
+      background-position: 0 0, 20px 15px;
+      animation: meteo-snow 6s linear infinite;
+    }
+    {% endif %}
+
+    {% if meteo in ['lightning', 'lightning-rainy'] %}
+    /* Orage : éclairs (flash sur toute la card) */
+    :host(.meteo) ha-card {
+      animation: meteo-flash 7s linear infinite;
+    }
+    /* L'éclair en zigzag, en diagonale du haut-droit vers le bas-gauche */
+    :host(.meteo) ha-card::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: 0;
+      right: 12%;
+      width: 30%;
+      height: 100%;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'><polyline points='52,0 38,28 47,31 26,60 36,63 8,100' fill='none' stroke='white' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/></svg>") center / contain no-repeat;
+      filter: drop-shadow(0 0 4px white) drop-shadow(0 0 10px var(--theme-purple));
+      opacity: 0;
+      animation: meteo-bolt 7s linear infinite;
+    }
+    {% endif %}
+
     @media (prefers-reduced-motion: reduce) {
+      :host(.meteo) ha-card,
+      :host(.meteo) ha-card::before,
       :host(.meteo) ha-card::after {
         animation: none;
       }
