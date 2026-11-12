@@ -173,32 +173,25 @@ S_theme:
       }
     }
 
-    /* ===== Climat (température / humidité, mini-graph-card) ===== */
+    /* ===== Cards mini-graph-card : base commune (climat, solaire) ===== */
     {# mini-graph-card n'a pas d'"entity" mais une liste "entities" :
-       on lit la 1re entité de la liste (la température), qu'elle soit
-       écrite en texte simple ou sous forme "- entity: ...". #}
+       on lit la 1re entité de la liste, qu'elle soit écrite
+       en texte simple ou sous forme "- entity: ...". #}
     {% set ents = config.entities if config.entities is defined and config.entities else [] %}
     {% set ent1 = ents[0] if ents else '' %}
     {% set ent1 = ent1.entity if ent1 is mapping else ent1 %}
-    {% set temp = states(ent1) | float(none) if ent1 else none %}
-    :host(.climat) ha-card {
-      {% if temp is none %}
-        --climat-color: transparent;
-      {% elif temp < 18 %}
-        --climat-color: var(--theme-blue);
-      {% elif temp < 20 %}
-        --climat-color: var(--theme-cyan);
-      {% elif temp < 24 %}
-        --climat-color: var(--theme-green);
-      {% elif temp < 27 %}
-        --climat-color: var(--theme-orange);
-      {% else %}
-        --climat-color: var(--theme-red);
-      {% endif %}
-      border-color: color-mix(in srgb, var(--climat-color) 40%, transparent);
+    {# Chaque classe définit plus bas :
+         --mg-color     : la couleur d'accent de la card
+         --mg-intensite : la force de la teinte de fond (30 % par défaut) #}
+    :host(.climat) ha-card,
+    :host(.solaire) ha-card {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: color-mix(in srgb, var(--mg-color) 40%, transparent);
       background:
         linear-gradient(160deg,
-          color-mix(in srgb, var(--climat-color) 30%, transparent),
+          color-mix(in srgb, var(--mg-color) var(--mg-intensite, 30%), transparent),
           transparent 70%),
         var(--ha-card-background, var(--card-background-color));
       transition: border-color 1s ease;
@@ -206,16 +199,19 @@ S_theme:
     /* Hauteur pilotée par grid_options → rows (vue Sections) :
        la card remplit sa case, l'en-tête garde sa taille,
        et la courbe s'étire ou se tasse pour occuper le reste. */
-    :host(.climat) {
+    :host(.climat),
+    :host(.solaire) {
       height: 100%;
     }
-    :host(.climat) ha-card {
+    :host(.climat) ha-card,
+    :host(.solaire) ha-card {
       height: 100%;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
     }
-    :host(.climat) .graph {
+    :host(.climat) .graph,
+    :host(.solaire) .graph {
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
@@ -223,37 +219,112 @@ S_theme:
       justify-content: flex-end;
     }
     :host(.climat) .graph__container,
-    :host(.climat) .graph__container__svg {
+    :host(.climat) .graph__container__svg,
+    :host(.solaire) .graph__container,
+    :host(.solaire) .graph__container__svg {
       flex: 1 1 auto;
       min-height: 0;
       height: 100%;
     }
-    :host(.climat) .graph__container__svg svg {
+    :host(.climat) .graph__container__svg svg,
+    :host(.solaire) .graph__container__svg svg {
       height: 100%;
       width: 100%;
     }
-    /* Icône du thermomètre assortie à la teinte
+    /* Icône assortie à l'accent
        (mini-graph-card l'affiche semi-transparente : on remet opacity à 1) */
     :host(.climat) .icon,
-    :host(.climat) .icon ha-icon {
-      --paper-item-icon-color: var(--climat-color);
-      --state-icon-color: var(--climat-color);
-      color: var(--climat-color);
+    :host(.climat) .icon ha-icon,
+    :host(.solaire) .icon,
+    :host(.solaire) .icon ha-icon {
+      --paper-item-icon-color: var(--mg-color);
+      --state-icon-color: var(--mg-color);
+      color: var(--mg-color);
       opacity: 1;
     }
     /* Textes : même hiérarchie que les autres cards
-       (nom et valeur en blanc, unité et humidité en gris secondaire) */
+       (nom et valeur en blanc, unité et valeur secondaire en gris) */
     :host(.climat) .name,
     :host(.climat) .name span,
-    :host(.climat) .state__value {
+    :host(.climat) .state__value,
+    :host(.solaire) .name,
+    :host(.solaire) .name span,
+    :host(.solaire) .state__value {
       color: var(--primary-text-color);
       opacity: 1;
     }
     :host(.climat) .state__uom,
-    :host(.climat) .states--secondary {
+    :host(.climat) .states--secondary,
+    :host(.solaire) .state__uom,
+    :host(.solaire) .states--secondary {
       color: var(--secondary-text-color);
       opacity: 1;
     }
+
+    /* ===== Climat : couleur selon la température ===== */
+    {% set temp = states(ent1) | float(none) if ent1 else none %}
+    :host(.climat) ha-card {
+      {% if temp is none %}
+        --mg-color: transparent;
+      {% elif temp < 18 %}
+        --mg-color: var(--theme-blue);
+      {% elif temp < 20 %}
+        --mg-color: var(--theme-cyan);
+      {% elif temp < 24 %}
+        --mg-color: var(--theme-green);
+      {% elif temp < 27 %}
+        --mg-color: var(--theme-orange);
+      {% else %}
+        --mg-color: var(--theme-red);
+      {% endif %}
+    }
+
+    /* ===== Solaire : intensité continue selon la production ===== */
+    {# Puissance crête de l'installation, en W (1,5 kWc) #}
+    {% set solaire_max = 1500 %}
+    {% set puissance = states(ent1) | float(0) if ent1 else 0 %}
+    {% set ratio = [puissance / solaire_max, 1] | min if puissance > 0 else 0 %}
+    :host(.solaire) ha-card {
+      {% if puissance < 10 %}
+        /* Nuit / pas de production : card neutre, icône grise */
+        --mg-color: var(--secondary-text-color);
+        --mg-intensite: 0%;
+      {% else %}
+        --mg-color: var(--theme-yellow);
+        /* De 8 % (production faible) à 45 % (pleine puissance) */
+        --mg-intensite: {{ (8 + ratio * 37) | round(0) | int }}%;
+        --solaire-halo: {{ (0.25 + ratio * 0.75) | round(2) }};
+      {% endif %}
+    }
+    {% if puissance >= 10 %}
+    @keyframes solaire-halo {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.15); }
+    }
+    /* Halo de soleil derrière l'icône (coin haut-droit),
+       d'autant plus lumineux que la production est forte */
+    :host(.solaire) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: -50px;
+      right: -50px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        color-mix(in srgb, var(--theme-yellow) 55%, transparent),
+        transparent 70%);
+      opacity: var(--solaire-halo);
+      animation: solaire-halo 6s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      :host(.solaire) ha-card::after {
+        animation: none;
+      }
+    }
+    {% endif %}
 
     /* ===== Météo ===== */
     {% set meteo = etat %}

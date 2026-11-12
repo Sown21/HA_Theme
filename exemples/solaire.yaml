@@ -1,0 +1,36 @@
+# Card "Solaire" (puissance instantanée + total + courbe 24 h)
+# Nécessite : mini-graph-card (HACS)
+# La 1re entité DOIT être la puissance en W : le thème s'en sert pour l'intensité.
+# Puissance crête (1500 W) réglée dans le thème : variable "solaire_max".
+
+type: custom:mini-graph-card
+name: Solaire
+icon: mdi:solar-power-variant
+grid_options:
+  columns: 6
+  rows: 3
+entities:
+  - entity: sensor.panneaux_solaire_puissance
+    name: Puissance
+  - entity: sensor.total_production_euro
+    name: Total
+    show_graph: false
+    show_state: true
+hours_to_show: 24
+points_per_hour: 4
+line_width: 2
+font_size: 70
+animate: true
+lower_bound: 0
+upper_bound: 1500
+line_color: "#ffce00"
+show:
+  name: true
+  icon: true
+  state: true
+  legend: false
+  labels: false
+  points: false
+  fill: fade
+card_mod:
+  class: solaire
