@@ -140,10 +140,10 @@ S_theme:
     :host(.tempo-jours) bar-card-currentbar {
       width: var(--bar-percent);
       background: linear-gradient(90deg,
-        color-mix(in srgb, var(--bar-color) 35%, transparent),
+        color-mix(in srgb, var(--bar-color) 65%, transparent),
         var(--bar-color));
       border-radius: 999px;
-      box-shadow: 0 0 10px color-mix(in srgb, var(--bar-color) 45%, transparent);
+      box-shadow: 0 0 5px color-mix(in srgb, var(--bar-color) 30%, transparent);
       animation: tempo-fill 1.2s ease-out;
     }
     @media (prefers-reduced-motion: reduce) {
