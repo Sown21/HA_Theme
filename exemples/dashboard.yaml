@@ -1,0 +1,270 @@
+# Dashboard "Maison" (PC / tablette) : placement au pixel avec layout-card (HACS)
+#
+# À coller dans : tableau de bord → ⋮ → Modifier le tableau de bord
+#                 → ⋮ → Éditeur de configuration brute (remplace tout)
+#
+# Principe : la page est quadrillée en cases de 10 px.
+#
+#   view_layout:
+#     grid-column: 1 / span 13    -> à 0 px du bord gauche, LARGE de 130 px
+#     grid-row: 1 / span 13       -> à 0 px du haut,        HAUTE de 130 px
+#
+#   span   = taille en px ÷ 10      (130 px -> span 13)
+#   départ = position en px ÷ 10 + 1 (à 140 px du bord -> 15)
+#
+# Carré = même span en largeur et en hauteur.
+# Espace entre deux cards : laisser 1 case vide (10 px) entre elles.
+# Écran : tablette Nexus 10 en kiosk, 1280 x 800 px -> 128 cases de large, 80 de haut.
+# Plan (marges 20 px, écarts 20 px, 3 zones de 400 px) :
+#   x 20-420  : tempo | demain, jours restants, solaire, extracteur | volet
+#   x 440-840 : météo, aspirateur, carte
+#   x 860-1260: climat, chauffage, caméra salon, caméra garage
+# Tout tient dans 800 px de haut (dernière card : y 390 + 380 = 770 px).
+# Pas de responsive : le téléphone aura sa propre vue (plus tard).
+# Entités demo (à remplacer dans la future maison) : cover.living_room_window, climate.heatpump
+
+title: Maison
+views:
+  - title: Maison
+    path: maison
+    icon: mdi:home
+    type: custom:grid-layout
+    layout:
+      # 1 case = 10 px, sans écart : l'espace entre les cards = cases laissées vides
+      grid-template-columns: repeat(128, 10px)
+      grid-auto-rows: 10px
+      grid-gap: 0
+      padding: 0
+      margin: 0
+    cards:
+
+      # ===================== Météo (colonnes 9-16) =====================
+      - type: weather-forecast
+        entity: weather.forecast_maison
+        show_current: true
+        show_forecast: true
+        forecast_type: daily
+        view_layout:
+          grid-column: 2 / span 40
+          grid-row: 2 / span 23
+        card_mod:
+          class: meteo
+
+      # ===================== Énergie (colonnes 1-8) =====================
+      - type: tile
+        entity: sensor.rte_tempo_couleur_actuelle
+        name: Aujourd'hui<
+        icon: mdi:lightning-bolt
+        vertical: true
+        view_layout:
+          grid-column: 54 / span 10
+          grid-row: 2 / span 10
+        card_mod:
+          class: tempo
+          style: |
+            ha-tile-icon { display: none; }
+
+      - type: tile
+        entity: sensor.rte_tempo_prochaine_couleur
+        name: Demain
+        icon: mdi:lightning-bolt
+        vertical: true
+        view_layout:
+          grid-column: 66 / span 10
+          grid-row: 2 / span 10
+        card_mod:
+          class: tempo
+          style: |
+            ha-tile-icon { display: none; }
+
+      - type: custom:bar-card
+        height: 5px
+        direction: right
+        positions:
+          icon: "off"
+          indicator: "off"
+          name: outside
+          value: outside
+          minmax: "off"
+        entities:
+          - entity: sensor.rte_tempo_cycle_jours_restants_bleu
+            name: Bleu
+            max: 300
+            color: var(--theme-blue)
+          - entity: sensor.rte_tempo_cycle_jours_restants_blanc
+            name: Blanc
+            max: 43
+            color: var(--theme-white)
+          - entity: sensor.rte_tempo_cycle_jours_restants_rouge
+            name: Rouge
+            max: 22
+            color: var(--theme-red)
+        view_layout:
+          grid-column: 45 / span 40
+          grid-row: 12 / span 13
+        card_mod:
+          class: tempo-jours
+
+      - type: custom:mini-graph-card
+        name: Solaire
+        icon: mdi:solar-power-variant
+        entities:
+          - entity: sensor.panneaux_solaire_puissance
+            name: Puissance
+          - entity: sensor.total_production_euro
+            name: Total
+            show_graph: false
+            show_state: true
+        hours_to_show: 24
+        points_per_hour: 4
+        line_width: 2
+        font_size: 70
+        animate: true
+        lower_bound: 0
+        upper_bound: 1500
+        line_color: "#ffce00"
+        show:
+          name: true
+          icon: true
+          state: true
+          legend: false
+          labels: false
+          points: false
+          fill: fade
+        view_layout:
+          grid-column: 3 / span 40
+          grid-row: 30 / span 20
+        card_mod:
+          class: solaire
+
+      # ===================== Climat (colonnes 17-24) =====================
+      - type: custom:mini-graph-card
+        name: Maison
+        icon: mdi:thermometer
+        entities:
+          - entity: sensor.temperature_maison_temperature
+            name: Température
+          - entity: sensor.temperature_maison_humidite
+            name: Humidité
+            show_graph: false
+            show_state: true
+        hours_to_show: 24
+        points_per_hour: 2
+        line_width: 2
+        font_size: 70
+        animate: true
+        show:
+          name: true
+          icon: true
+          state: true
+          legend: false
+          labels: false
+          points: false
+          fill: fade
+        color_thresholds:
+          - value: 0
+            color: '#3b82f6'
+          - value: 18
+            color: '#22d3ee'
+          - value: 20
+            color: '#22c55e'
+          - value: 24
+            color: '#f59e0b'
+          - value: 27
+            color: '#ef4444'
+        color_thresholds_transition: smooth
+        view_layout:
+          grid-column: 88 / span 40
+          grid-row: 3 / span 20
+        card_mod:
+          class: climat
+
+      - type: tile
+        entity: climate.heatpump
+        name: Salon
+        features_position: bottom
+        features:
+          - type: target-temperature
+        view_layout:
+          grid-column: 87 / span 19
+          grid-row: 25 / span 13
+        card_mod:
+          class: chauffage
+      # Futur : autre pièce à côté -> grid-column: 87 / span 19, grid-row: 25 / span 13
+
+      # ===================== Maison (colonnes 1-8) =====================
+      - type: tile
+        entity: switch.extracteur_3
+        name: Extracteur
+        vertical: true
+        view_layout:
+          grid-column: 3 / span 19
+          grid-row: 52 / span 13
+        card_mod:
+          class: prise
+
+      - type: tile
+        entity: cover.living_room_window
+        name: Salon
+        features_position: bottom
+        features:
+          - type: cover-open-close
+        view_layout:
+          grid-column: 24 / span 19
+          grid-row: 52 / span 13
+        card_mod:
+          class: volet
+      # Futur : lumières en dessous -> grid-row: 52 / span 13, class: lumiere
+
+      # ===================== Sécurité (zone droite, sous le chauffage) =====================
+      # Caméras UniFi Protect, flux en direct.
+      # aspect_ratio 20x9 = 400 x 180 px : l'image est recadrée pour remplir la card.
+      - type: picture-entity
+        entity: camera.salon_high_resolution_channel
+        camera_view: live
+        aspect_ratio: 20x9
+        show_name: false
+        show_state: false
+        view_layout:
+          grid-column: 87 / span 40
+          grid-row: 40 / span 18
+
+      - type: picture-entity
+        entity: camera.garage_high_resolution_channel
+        camera_view: live
+        aspect_ratio: 20x9
+        show_name: false
+        show_state: false
+        view_layout:
+          grid-column: 87 / span 40
+          grid-row: 60 / span 18
+
+      # ===================== Ménage (colonnes 17-24) =====================
+      - type: tile
+        entity: vacuum.robert_dreamebot_d10_plus
+        name: Robert
+        icon: mdi:robot-vacuum
+        features_position: bottom
+        features:
+          - type: vacuum-commands
+            commands:
+              - start_pause
+              - stop
+              - return_home
+        view_layout:
+          grid-column: 45 / span 40
+          grid-row: 25 / span 13
+        card_mod:
+          class: aspirateur
+
+      - type: picture-entity
+        entity: camera.dreamebot_d10_plus_map
+        name: Carte
+        show_name: true
+        show_state: false
+        camera_view: live
+        view_layout:
+          grid-column: 45 / span 40
+          grid-row: 40 / span 38
+        card_mod:
+          class: aspirateur-carte
