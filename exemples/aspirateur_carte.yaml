@@ -1,0 +1,14 @@
+# Card "Carte de nettoyage" (plan du logement généré par l'intégration Dreame)
+# camera_view: live -> la carte se met à jour en direct pendant le nettoyage
+# Style : thème, classe aspirateur-carte
+
+type: picture-entity
+entity: camera.dreamebot_d10_plus_map
+name: Carte
+show_name: true
+show_state: false
+camera_view: live
+grid_options:
+  columns: 6
+card_mod:
+  class: aspirateur-carte

@@ -510,3 +510,99 @@ S_theme:
         animation: none;
       }
     }
+    /* ===== Aspirateur (card tile d'un vacuum) ===== */
+    {# États standard d'un vacuum HA :
+       cleaning, returning, docked, paused, idle, error #}
+    :host(.aspirateur) ha-card {
+      {% if etat == 'cleaning' %}
+        --aspi-color: var(--theme-green);
+      {% elif etat == 'returning' %}
+        --aspi-color: var(--theme-cyan);
+      {% elif etat == 'docked' %}
+        --aspi-color: var(--theme-blue);
+      {% elif etat == 'paused' %}
+        --aspi-color: var(--theme-orange);
+      {% elif etat == 'error' %}
+        --aspi-color: var(--theme-red);
+      {% else %}
+        --aspi-color: var(--secondary-text-color);
+      {% endif %}
+      --tile-color: var(--aspi-color) !important;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: color-mix(in srgb, var(--aspi-color) 45%, transparent);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--aspi-color) 20%, transparent);
+    }
+    :host(.aspirateur) ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(145deg,
+        color-mix(in srgb, var(--aspi-color) 30%, transparent),
+        transparent 70%);
+    }
+
+    {% if etat == 'cleaning' %}
+    /* En nettoyage : ondes "radar" qui partent de l'icône */
+    @keyframes aspi-onde {
+      from { transform: scale(1);   opacity: 0.7; }
+      to   { transform: scale(4.5); opacity: 0; }
+    }
+    :host(.aspirateur) ha-card::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--aspi-color);
+      z-index: -1;
+      pointer-events: none;
+      animation: aspi-onde 2.2s ease-out infinite;
+    }
+    {% elif etat == 'returning' %}
+    /* Retour à la base : la lueur respire */
+    @keyframes aspi-retour {
+      0%, 100% { box-shadow: 0 0 8px  color-mix(in srgb, var(--aspi-color) 15%, transparent); }
+      50%      { box-shadow: 0 0 26px color-mix(in srgb, var(--aspi-color) 45%, transparent); }
+    }
+    :host(.aspirateur) ha-card {
+      animation: aspi-retour 2s ease-in-out infinite;
+    }
+    {% elif etat == 'error' %}
+    /* Erreur : la bordure clignote */
+    @keyframes aspi-erreur {
+      0%, 100% { border-color: color-mix(in srgb, var(--aspi-color) 30%, transparent); }
+      50%      { border-color: var(--aspi-color); }
+    }
+    :host(.aspirateur) ha-card {
+      animation: aspi-erreur 1s ease-in-out infinite;
+    }
+    {% endif %}
+
+    @media (prefers-reduced-motion: reduce) {
+      :host(.aspirateur) ha-card,
+      :host(.aspirateur) ha-card::after {
+        animation: none;
+      }
+    }
+
+    /* ===== Aspirateur : carte de nettoyage (card picture-entity) ===== */
+    :host(.aspirateur-carte) ha-card {
+      overflow: hidden;
+    }
+    :host(.aspirateur-carte) hui-image {
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    /* Bandeau du nom : fondu vers le fond du thème au lieu du gris opaque */
+    :host(.aspirateur-carte) .footer {
+      background: linear-gradient(to bottom,
+        transparent,
+        color-mix(in srgb, var(--theme-bg) 85%, transparent));
+      color: var(--primary-text-color);
+      font-weight: 500;
+    }

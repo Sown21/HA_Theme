@@ -1,0 +1,21 @@
+# Card "Aspirateur" (tile + boutons de commande)
+# Couleur selon l'état (thème, classe aspirateur) :
+#   cleaning vert (+ ondes) | returning cyan (lueur qui respire)
+#   docked bleu | paused orange | error rouge (bordure qui clignote)
+
+type: tile
+entity: vacuum.robert_dreamebot_d10_plus
+name: Robert
+icon: mdi:robot-vacuum
+vertical: false
+features_position: bottom
+grid_options:
+  columns: 6
+features:
+  - type: vacuum-commands
+    commands:
+      - start_pause
+      - stop
+      - return_home
+card_mod:
+  class: aspirateur
