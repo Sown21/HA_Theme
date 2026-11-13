@@ -127,6 +127,32 @@ S_theme:
     }
 
     /* ===== Tempo : jours restants (bar-card) ===== */
+    /* La card remplit sa case, et les barres se répartissent dans la hauteur
+       disponible au lieu de garder leurs marges fixes (qui débordaient). */
+    :host(.tempo-jours) {
+      height: 100%;
+    }
+    :host(.tempo-jours) ha-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    :host(.tempo-jours) #states {
+      flex: 1 1 auto;
+      min-height: 0;
+      /* hauteur forcée : le flex seul ne l'étire pas (vérifié en console) */
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      padding: 8px 16px;
+    }
+    :host(.tempo-jours) #states > * {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
     /* Barre centrée verticalement sur le nom et la valeur.
        (align-items sur bar-card-card est sans effet : bar-card l'impose) */
     :host(.tempo-jours) bar-card-background {
