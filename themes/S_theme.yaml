@@ -606,3 +606,62 @@ S_theme:
       color: var(--primary-text-color);
       font-weight: 500;
     }
+
+    /* ===== Volet (card tile d'un cover) ===== */
+    {# Position : 0 = fermé, 100 = ouvert.
+       Volet sans position (simple montée/descente) : déduite de l'état. #}
+    {% set vpos = state_attr(config.entity, 'current_position') if config.entity is defined and config.entity else none %}
+    {% set vpos = vpos|int(0) if vpos is not none else (0 if etat == 'closed' else 100) %}
+    :host(.volet) ha-card {
+      {% if etat in ['opening', 'closing'] %}
+        --volet-color: var(--theme-cyan);
+      {% elif vpos > 0 %}
+        --volet-color: var(--theme-blue);
+      {% else %}
+        --volet-color: var(--secondary-text-color);
+      {% endif %}
+      --tile-color: var(--volet-color) !important;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      /* Lumière du jour : plus le volet est ouvert, plus la card s'éclaire */
+      background:
+        linear-gradient(145deg,
+          color-mix(in srgb, var(--volet-color) {{ (vpos * 0.3)|round(0)|int }}%, transparent),
+          transparent 70%),
+        var(--ha-card-background);
+      border-color: color-mix(in srgb, var(--volet-color) 40%, transparent);
+      transition: border-color 0.6s ease, box-shadow 0.6s ease, scale 0.2s ease-out;
+    }
+    /* Le tablier : des lames qui descendent du haut selon la fermeture */
+    :host(.volet) ha-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: {{ 100 - vpos }}%;
+      z-index: -1;
+      background: repeating-linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.05) 0 7px,
+        rgba(0, 0, 0, 0.30) 7px 9px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+      transition: height 1s linear;
+    }
+    {% if etat in ['opening', 'closing'] %}
+    /* En mouvement : les lames défilent et la bordure s'allume */
+    @keyframes volet-monte    { to { background-position: 0 -9px; } }
+    @keyframes volet-descend  { to { background-position: 0 9px; } }
+    :host(.volet) ha-card {
+      box-shadow: 0 0 18px color-mix(in srgb, var(--volet-color) 30%, transparent);
+    }
+    :host(.volet) ha-card::before {
+      animation: {{ 'volet-monte' if etat == 'opening' else 'volet-descend' }} 0.4s linear infinite;
+    }
+    {% endif %}
+    @media (prefers-reduced-motion: reduce) {
+      :host(.volet) ha-card::before {
+        animation: none;
+        transition: none;
+      }
+    }

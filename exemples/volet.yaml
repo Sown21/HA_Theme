@@ -1,0 +1,19 @@
+# Card "Volet" (tile + boutons + curseur de position)
+# Fonctionne avec n'importe quel cover : Somfy (Overkiz), Delta Dore (Tydom)…
+# Thème, classe volet :
+#   - les lames du tablier recouvrent la card selon la fermeture
+#   - la card s'éclaire (bleu) selon l'ouverture
+#   - en mouvement : lames qui défilent + bordure cyan
+# Pour tester sans matériel : intégration demo -> cover.living_room_window
+
+type: tile
+entity: cover.living_room_window
+name: Salon
+features_position: bottom
+grid_options:
+  columns: 6
+features:
+  - type: cover-open-close
+  - type: cover-position
+card_mod:
+  class: volet

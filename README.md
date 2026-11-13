@@ -42,5 +42,6 @@ card_mod:
 | `meteo` | weather-forecast | animation selon la météo |
 | `aspirateur` | tile (vacuum) | couleur + animation selon l'état |
 | `aspirateur-carte` | picture-entity (plan) | intégration du plan dans le thème |
+| `volet` | tile (cover) | lames selon la position, défilement en mouvement |
 
 Des exemples complets sont dans le dossier [`exemples/`](exemples/).
