@@ -642,10 +642,12 @@ S_theme:
       right: 0;
       height: {{ 100 - vpos }}%;
       z-index: -1;
+      /* Lame : reflet clair en haut -> plus sombre en bas, puis joint noir */
       background: repeating-linear-gradient(to bottom,
-        rgba(255, 255, 255, 0.05) 0 7px,
-        rgba(0, 0, 0, 0.30) 7px 9px);
-      border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+        rgba(255, 255, 255, 0.14) 0,
+        rgba(255, 255, 255, 0.04) 7px,
+        rgba(0, 0, 0, 0.55) 7px 9px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.25);
       transition: height 1s linear;
     }
     {% if etat in ['opening', 'closing'] %}
