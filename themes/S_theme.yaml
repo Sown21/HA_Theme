@@ -667,3 +667,150 @@ S_theme:
         transition: none;
       }
     }
+
+    /* ===== Chauffage (card tile d'un climate) ===== */
+    {# hvac_action dit ce que l'appareil fait VRAIMENT (heating, idle, cooling…).
+       Si l'intégration ne le fournit pas : on compare température et consigne. #}
+    {% set ch_ok = config.entity is defined and config.entity and config.entity.startswith('climate.') %}
+    {% set ch_action = state_attr(config.entity, 'hvac_action') if ch_ok else none %}
+    {% set ch_preset = (state_attr(config.entity, 'preset_mode') or '')|lower if ch_ok else '' %}
+    {% if ch_ok and ch_action is none %}
+      {% set ch_actuelle = state_attr(config.entity, 'current_temperature')|float(none) %}
+      {% set ch_consigne = state_attr(config.entity, 'temperature')|float(none) %}
+      {% if etat in ['heat', 'heat_cool', 'auto'] and ch_actuelle is not none and ch_consigne is not none and ch_actuelle < ch_consigne %}
+        {% set ch_action = 'heating' %}
+      {% endif %}
+    {% endif %}
+    {% if etat == 'off' %}                                       {% set ch_mode = 'off' %}
+    {% elif ch_action == 'heating' %}                            {% set ch_mode = 'chauffe' %}
+    {% elif ch_action == 'cooling' %}                            {% set ch_mode = 'froid' %}
+    {% elif ch_preset in ['eco', 'away', 'absence', 'hors-gel', 'frost_protection'] %}
+                                                                 {% set ch_mode = 'eco' %}
+    {% elif etat in ['heat', 'heat_cool', 'auto'] %}             {% set ch_mode = 'veille' %}
+    {% elif etat == 'cool' %}                                    {% set ch_mode = 'froid-veille' %}
+    {% else %}                                                   {% set ch_mode = 'off' %}
+    {% endif %}
+    :host(.chauffage) ha-card {
+      {% if ch_mode == 'chauffe' %}
+        --chauffage-color: var(--theme-orange); --chauffage-intensite: 35%;
+      {% elif ch_mode == 'veille' %}
+        --chauffage-color: var(--theme-orange); --chauffage-intensite: 12%;
+      {% elif ch_mode == 'eco' %}
+        --chauffage-color: var(--theme-green);  --chauffage-intensite: 15%;
+      {% elif ch_mode == 'froid' %}
+        --chauffage-color: var(--theme-cyan);   --chauffage-intensite: 30%;
+      {% elif ch_mode == 'froid-veille' %}
+        --chauffage-color: var(--theme-cyan);   --chauffage-intensite: 12%;
+      {% else %}
+        --chauffage-color: var(--secondary-text-color); --chauffage-intensite: 0%;
+      {% endif %}
+      --tile-color: var(--chauffage-color) !important;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      background:
+        linear-gradient(to top,
+          color-mix(in srgb, var(--chauffage-color) var(--chauffage-intensite), transparent),
+          transparent 75%),
+        var(--ha-card-background);
+      border-color: color-mix(in srgb, var(--chauffage-color) 40%, transparent);
+    }
+    {% if ch_mode == 'chauffe' %}
+    /* Chauffe : nappe de chaleur qui respire depuis le bas
+       + particules d'air chaud qui montent et s'évanouissent */
+    @keyframes chauffage-souffle {
+      0%, 100% { transform: scaleY(0.75); opacity: 0.6; }
+      50%      { transform: scaleY(1);    opacity: 1; }
+    }
+    @keyframes chauffage-particules {
+      to { background-position: 0 -40px, 11px -60px; }
+    }
+    :host(.chauffage) ha-card {
+      box-shadow: 0 0 20px color-mix(in srgb, var(--chauffage-color) 25%, transparent);
+    }
+    :host(.chauffage) ha-card::before,
+    :host(.chauffage) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+    }
+    :host(.chauffage) ha-card::before {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 70%;
+      background: linear-gradient(to top,
+        color-mix(in srgb, var(--chauffage-color) 40%, transparent),
+        transparent);
+      transform-origin: bottom;
+      animation: chauffage-souffle 3s ease-in-out infinite;
+    }
+    :host(.chauffage) ha-card::after {
+      inset: 0;
+      background-image:
+        radial-gradient(circle, color-mix(in srgb, var(--chauffage-color) 70%, transparent) 1.5px, transparent 2.5px),
+        radial-gradient(circle, color-mix(in srgb, var(--chauffage-color) 50%, transparent) 1px, transparent 2px);
+      background-size: 34px 40px, 22px 30px;
+      background-position: 0 0, 11px 0;
+      /* les particules disparaissent en montant */
+      -webkit-mask-image: linear-gradient(to top, black 10%, transparent 80%);
+      mask-image: linear-gradient(to top, black 10%, transparent 80%);
+      animation: chauffage-particules 3s linear infinite;
+    }
+    {% elif ch_mode == 'froid' %}
+    /* Climatisation : bord givré qui respire */
+    @keyframes chauffage-givre {
+      0%, 100% { box-shadow: inset 0 0 12px color-mix(in srgb, var(--chauffage-color) 20%, transparent); }
+      50%      { box-shadow: inset 0 0 26px color-mix(in srgb, var(--chauffage-color) 45%, transparent); }
+    }
+    /* + nappe d'air froid qui descend du haut et cristaux qui tombent
+       (le miroir de la chauffe) */
+    @keyframes chauffage-froid-souffle {
+      0%, 100% { transform: scaleY(0.75); opacity: 0.6; }
+      50%      { transform: scaleY(1);    opacity: 1; }
+    }
+    @keyframes chauffage-cristaux {
+      to { background-position: 0 40px, 11px 60px; }
+    }
+    :host(.chauffage) ha-card {
+      animation: chauffage-givre 4s ease-in-out infinite;
+    }
+    :host(.chauffage) ha-card::before,
+    :host(.chauffage) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+    }
+    :host(.chauffage) ha-card::before {
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 70%;
+      background: linear-gradient(to bottom,
+        color-mix(in srgb, var(--chauffage-color) 35%, transparent),
+        transparent);
+      transform-origin: top;
+      animation: chauffage-froid-souffle 4s ease-in-out infinite;
+    }
+    :host(.chauffage) ha-card::after {
+      inset: 0;
+      background-image:
+        radial-gradient(circle, color-mix(in srgb, white 80%, transparent) 1.5px, transparent 2.5px),
+        radial-gradient(circle, color-mix(in srgb, var(--chauffage-color) 70%, transparent) 1px, transparent 2px);
+      background-size: 34px 40px, 22px 30px;
+      background-position: 0 0, 11px 0;
+      /* les cristaux fondent en descendant */
+      -webkit-mask-image: linear-gradient(to bottom, black 10%, transparent 80%);
+      mask-image: linear-gradient(to bottom, black 10%, transparent 80%);
+      animation: chauffage-cristaux 4s linear infinite;
+    }
+    {% endif %}
+    @media (prefers-reduced-motion: reduce) {
+      :host(.chauffage) ha-card,
+      :host(.chauffage) ha-card::before,
+      :host(.chauffage) ha-card::after {
+        animation: none;
+      }
+    }

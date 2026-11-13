@@ -43,5 +43,6 @@ card_mod:
 | `aspirateur` | tile (vacuum) | couleur + animation selon l'état |
 | `aspirateur-carte` | picture-entity (plan) | intégration du plan dans le thème |
 | `volet` | tile (cover) | lames selon la position, défilement en mouvement |
+| `chauffage` | tile (climate) | air chaud qui monte quand ça chauffe, éco vert, clim givrée |
 
 Des exemples complets sont dans le dossier [`exemples/`](exemples/).

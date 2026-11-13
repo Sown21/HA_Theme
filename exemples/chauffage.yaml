@@ -1,0 +1,22 @@
+# Card "Chauffage" (tile + modes + consigne)
+# Fonctionne avec n'importe quel climate : Delta Dore (Tydom), Somfy (Overkiz)…
+# Thème, classe chauffage :
+#   chauffe en ce moment -> orange + air chaud qui monte
+#   mode chauffage, consigne atteinte -> orange léger
+#   preset éco / absence -> vert | climatisation -> cyan givré | éteint -> gris
+# Pour tester sans matériel : intégration demo -> climate.heatpump (ou climate.hvac / climate.ecobee)
+
+type: tile
+entity: climate.heatpump
+name: Salon
+features_position: bottom
+grid_options:
+  columns: 6
+features:
+  - type: target-temperature
+  - type: climate-hvac-modes
+    hvac_modes:
+      - heat
+      - "off"
+card_mod:
+  class: chauffage
