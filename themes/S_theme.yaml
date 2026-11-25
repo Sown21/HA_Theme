@@ -402,6 +402,11 @@ S_theme:
           color-mix(in srgb, white 22%, transparent), transparent 70%),
         radial-gradient(ellipse 40% 50% at 100% 100%,
           color-mix(in srgb, var(--theme-cyan) 20%, transparent), transparent 70%),
+        {% elif meteo == 'fog' %}
+        /* Brouillard : voile laiteux, plus épais vers le bas */
+        linear-gradient(to bottom,
+          rgba(200, 210, 225, 0.06),
+          rgba(200, 210, 225, 0.20)),
         {% endif %}
         linear-gradient(160deg,
           color-mix(in srgb, var(--meteo-color) 40%, transparent),
@@ -426,6 +431,27 @@ S_theme:
     @keyframes meteo-drift {
       from { transform: translateX(0); }
       to   { transform: translateX(-50%); }
+    }
+    /* Brouillard : décalage d'exactement une tuile (400px) */
+    @keyframes meteo-brume-gauche {
+      from { background-position: 0 0; }
+      to   { background-position: -400px 0; }
+    }
+    @keyframes meteo-brume-droite {
+      from { background-position: 0 60px; }
+      to   { background-position: 400px 60px; }
+    }
+    /* Nuages : décalage d'exactement une tuile (460px / 320px) */
+    @keyframes meteo-nuages-loin {
+      to { background-position: -460px 0; }
+    }
+    @keyframes meteo-nuages-proches {
+      to { background-position: -320px 0; }
+    }
+    /* Brouillard : la nappe s'épaissit et s'éclaircit */
+    @keyframes meteo-brume {
+      0%, 100% { opacity: 0.2; }
+      50%      { opacity: 0.45; }
     }
     @keyframes meteo-wind {
       from { transform: translateX(-100%); }
@@ -620,24 +646,66 @@ S_theme:
         display: none;
       }
     }
-    {% elif meteo in ['cloudy', 'fog'] %}
-    /* Couvert / brouillard : nuages qui défilent */
+    {% elif meteo == 'cloudy' %}
+    /* Couvert : nuages en relief (bosses + dessous ombré) sur 2 plans.
+       ::before = lointains (grands, pâles, flous, lents)
+       ::after  = proches (plus clairs, plus nets, plus rapides)
+       La différence de vitesse donne la profondeur (parallaxe).
+       Chaque plan défile d'exactement une tuile : boucle sans saut. */
+    :host(.meteo) ha-card::before,
     :host(.meteo) ha-card::after {
       content: "";
       position: absolute;
       z-index: -1;
       pointer-events: none;
-      top: 0;
       left: 0;
-      width: 200%;
-      height: 100%;
-      background:
-        radial-gradient(ellipse 30% 40% at 25% 30%, rgba(255, 255, 255, 0.18), transparent 70%),
-        radial-gradient(ellipse 25% 35% at 75% 65%, rgba(255, 255, 255, 0.14), transparent 70%);
-      background-size: 50% 100%;
+      right: 0;
       background-repeat: repeat-x;
-      filter: blur(4px);
-      animation: meteo-drift 20s linear infinite;
+    }
+    :host(.meteo) ha-card::before {
+      top: 0;
+      height: 120px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 460 120'><g fill='white' opacity='0.1'><circle cx='110' cy='45' r='35.2'/><circle cx='71.6' cy='57.8' r='25.6'/><circle cx='150' cy='54.6' r='28.8'/><circle cx='39.6' cy='70.6' r='17.6'/><circle cx='182' cy='69' r='19.2'/><ellipse cx='110' cy='73.8' rx='89.6' ry='17.6'/></g><ellipse cx='110' cy='80.2' rx='80' ry='12.8' fill='%230b1120' opacity='0.15'/><g fill='white' opacity='0.08'><circle cx='340' cy='30' r='28.6'/><circle cx='308.8' cy='40.4' r='20.8'/><circle cx='372.5' cy='37.8' r='23.4'/><circle cx='282.8' cy='50.8' r='14.3'/><circle cx='398.5' cy='49.5' r='15.6'/><ellipse cx='340' cy='53.4' rx='72.8' ry='14.3'/></g><ellipse cx='340' cy='58.6' rx='65' ry='10.4' fill='%230b1120' opacity='0.12'/></svg>");
+      background-size: 460px 120px;
+      filter: blur(5px);
+      animation: meteo-nuages-loin 120s linear infinite;
+    }
+    :host(.meteo) ha-card::after {
+      top: 25px;
+      height: 110px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 110'><g fill='white' opacity='0.2'><circle cx='80' cy='40' r='22'/><circle cx='56' cy='48' r='16'/><circle cx='105' cy='46' r='18'/><circle cx='36' cy='56' r='11'/><circle cx='125' cy='55' r='12'/><ellipse cx='80' cy='58' rx='56' ry='11'/></g><ellipse cx='80' cy='62' rx='50' ry='8' fill='%230b1120' opacity='0.25'/><g fill='white' opacity='0.16'><circle cx='240' cy='62' r='16.5'/><circle cx='222' cy='68' r='12'/><circle cx='258.75' cy='66.5' r='13.5'/><circle cx='207' cy='74' r='8.25'/><circle cx='273.75' cy='73.25' r='9'/><ellipse cx='240' cy='75.5' rx='42' ry='8.25'/></g><ellipse cx='240' cy='78.5' rx='37.5' ry='6' fill='%230b1120' opacity='0.2'/></svg>");
+      background-size: 320px 110px;
+      filter: blur(1.5px);
+      animation: meteo-nuages-proches 55s linear infinite;
+    }
+    {% elif meteo == 'fog' %}
+    /* Brouillard : voile qui ternit toute la card (posé dans le fond)
+       + 2 nappes de filaments de brume (bruit SVG feTurbulence étiré
+       horizontalement, raccordable sans couture) qui dérivent en sens
+       opposés. Plus dense en bas, comme une brume qui stagne au sol. */
+    :host(.meteo) ha-card::before,
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      inset: 0;
+      background-repeat: repeat;
+      background-size: 400px 200px;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), black 75%);
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), black 75%);
+    }
+    :host(.meteo) ha-card::before {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='0.005 0.035' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.8 0 0 0 -0.62'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+      opacity: 0.5;
+      animation: meteo-brume-gauche 70s linear infinite;
+    }
+    :host(.meteo) ha-card::after {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='0.008 0.05' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.6 0 0 0 -0.6'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+      background-position: 0 60px;
+      animation:
+        meteo-brume-droite 110s linear infinite,
+        meteo-brume 10s ease-in-out infinite;
     }
     {% elif meteo in ['windy', 'windy-variant'] %}
     /* Vent : rafales */
