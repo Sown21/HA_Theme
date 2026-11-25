@@ -422,9 +422,17 @@ S_theme:
       from { transform: translateX(-100%); }
       to   { transform: translateX(100%); }
     }
-    @keyframes meteo-rain {
-      from { background-position: 0 0, 18px 30px; }
-      to   { background-position: 0 70px, 18px 120px; }
+    /* Pluie : chaque plan descend d'exactement une tuile (boucle sans saut).
+       Même durée pour les 2, mais le plan proche parcourt 120px et le
+       lointain 80px : les gouttes proches tombent donc plus vite. */
+    @keyframes meteo-pluie {
+      from { background-position: 0 0, 20px 30px; }
+      to   { background-position: 0 120px, 20px 110px; }
+    }
+    /* Averse : tuiles plus petites (90px / 60px), donc décalage adapté */
+    @keyframes meteo-averse {
+      from { background-position: 0 0, 15px 20px; }
+      to   { background-position: 0 90px, 15px 80px; }
     }
     /* Neige : chute d'exactement une tuile pour une boucle sans saut */
     @keyframes meteo-neige-proche {
@@ -549,21 +557,51 @@ S_theme:
     {% endif %}
 
     {% if meteo in ['rainy', 'pouring', 'hail', 'lightning-rainy'] %}
-    /* Pluie : gouttes qui tombent (2 couches pour la profondeur) */
+    /* Pluie : gouttes effilées (traînée qui s'estompe vers le haut),
+       2 plans pour la profondeur : proche = longues, vives, rapides ;
+       lointain = courtes, pâles, lentes. Inclinées par le vent (skew). */
     :host(.meteo) ha-card::after {
       content: "";
       position: absolute;
       z-index: -1;
       pointer-events: none;
-      inset: -10%;
+      inset: -10% -25%;
       transform: skewX(-12deg);
-      background:
-        radial-gradient(1px 8px at 50% 50%, rgba(255, 255, 255, 0.40), transparent),
-        radial-gradient(1px 6px at 50% 50%, rgba(255, 255, 255, 0.25), transparent);
-      background-size: 37px 70px, 53px 90px;
-      background-position: 0 0, 18px 30px;
-      animation: meteo-rain {{ '0.4s' if meteo == 'pouring' else '0.7s' }} linear infinite;
+      background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 120'><defs><linearGradient id='g' x2='0' y2='1'><stop offset='0' stop-color='white' stop-opacity='0'/><stop offset='1' stop-color='white' stop-opacity='0.6'/></linearGradient></defs><path fill='url(%23g)' d='M10 5l0.7 20h-1.4zM38 48l0.8 24h-1.6zM24 86l0.65 18h-1.3zM52 14l0.6 16h-1.2z'/></svg>"),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 80'><defs><linearGradient id='g' x2='0' y2='1'><stop offset='0' stop-color='white' stop-opacity='0'/><stop offset='1' stop-color='white' stop-opacity='0.35'/></linearGradient></defs><path fill='url(%23g)' d='M8 10l0.45 10h-0.9zM28 42l0.45 11h-0.9zM18 64l0.4 9h-0.8z'/></svg>");
+      background-repeat: repeat;
+      {% if meteo == 'pouring' %}
+      /* averse : plus dense (tuiles plus petites) et plus rapide */
+      background-size: 45px 90px, 30px 60px;
+      animation: meteo-averse 0.3s linear infinite;
+      {% else %}
+      background-size: 60px 120px, 40px 80px;
+      animation: meteo-pluie 0.5s linear infinite;
+      {% endif %}
     }
+    {% if meteo != 'lightning-rainy' %}
+    /* Éclaboussures : petits ronds qui s'ouvrent en bas de la card,
+       chacun à son rythme (animation SMIL interne au SVG).
+       (Pas en cas d'orage : ::before sert à l'éclair) */
+    :host(.meteo) ha-card::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 16px;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 16'><g fill='none' stroke='white' stroke-width='0.8'><g transform='translate(30 12)'><ellipse rx='9' ry='2.5'><animateTransform attributeName='transform' type='scale' values='0;1' dur='0.9s' begin='0s' repeatCount='indefinite'/><animate attributeName='opacity' values='0.7;0' dur='0.9s' begin='0s' repeatCount='indefinite'/></ellipse></g><g transform='translate(85 12)'><ellipse rx='9' ry='2.5'><animateTransform attributeName='transform' type='scale' values='0;1' dur='0.9s' begin='0.35s' repeatCount='indefinite'/><animate attributeName='opacity' values='0.7;0' dur='0.9s' begin='0.35s' repeatCount='indefinite'/></ellipse></g><g transform='translate(140 12)'><ellipse rx='9' ry='2.5'><animateTransform attributeName='transform' type='scale' values='0;1' dur='0.9s' begin='0.6s' repeatCount='indefinite'/><animate attributeName='opacity' values='0.7;0' dur='0.9s' begin='0.6s' repeatCount='indefinite'/></ellipse></g><g transform='translate(185 12)'><ellipse rx='9' ry='2.5'><animateTransform attributeName='transform' type='scale' values='0;1' dur='0.9s' begin='0.15s' repeatCount='indefinite'/><animate attributeName='opacity' values='0.7;0' dur='0.9s' begin='0.15s' repeatCount='indefinite'/></ellipse></g><g transform='translate(225 12)'><ellipse rx='9' ry='2.5'><animateTransform attributeName='transform' type='scale' values='0;1' dur='0.9s' begin='0.8s' repeatCount='indefinite'/><animate attributeName='opacity' values='0.7;0' dur='0.9s' begin='0.8s' repeatCount='indefinite'/></ellipse></g></g></svg>") 0 0 / 240px 16px repeat-x;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      /* l'animation SMIL ne s'arrête pas via CSS : on masque */
+      :host(.meteo) ha-card::before {
+        display: none;
+      }
+    }
+    {% endif %}
     {% elif meteo in ['snowy', 'snowy-rainy'] %}
     /* Neige : flocons (❄) qui tombent en se balançant.
        2 couches pour la profondeur :
