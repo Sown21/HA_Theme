@@ -39,7 +39,7 @@ card_mod:
 | `tempo-jours` | bar-card | barres arrondies animées |
 | `climat` | mini-graph-card | teinte selon la température |
 | `solaire` | mini-graph-card | intensité selon la production |
-| `meteo` | weather-forecast | animation selon la météo |
+| `meteo` | weather-forecast | animation selon la météo, givre si la température ≤ 0 °C |
 | `aspirateur` | tile (vacuum) | couleur + animation selon l'état |
 | `aspirateur-carte` | picture-entity (plan) | intégration du plan dans le thème |
 | `volet` | tile (cover) | lames selon la position, défilement en mouvement |
