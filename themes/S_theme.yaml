@@ -448,20 +448,38 @@ S_theme:
       from { translate: -6px 0; }
       to   { translate: 6px 0; }
     }
+    /* Orage : cycle de 13 s, irrégulier comme un vrai orage :
+       - 1re salve (30-34 %) : grand éclair, double flash ;
+       - long silence ;
+       - 2e salve (78-81 %) : petit éclair (ou flash lointain sous la pluie).
+       Flash légèrement bleuté. */
     @keyframes meteo-flash {
-      0%, 88%, 91%, 94%, 100% { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0); }
-      89%                     { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.25); }
-      92.5%                   { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.15); }
+      0%, 29.9%, 31.5%, 32.5%, 34%, 77.9%, 79.2%, 79.8%, 81%, 100% {
+        box-shadow: inset 0 0 0 999px rgba(220, 225, 255, 0);
+      }
+      30.5% { box-shadow: inset 0 0 0 999px rgba(220, 225, 255, 0.28); }
+      33%   { box-shadow: inset 0 0 0 999px rgba(220, 225, 255, 0.18); }
+      78.5% { box-shadow: inset 0 0 0 999px rgba(220, 225, 255, 0.16); }
+      80.3% { box-shadow: inset 0 0 0 999px rgba(220, 225, 255, 0.10); }
     }
-    /* Éclair : se dessine de haut en bas pendant le 1er flash (88-89 %),
-       scintille avec le 2e flash (92.5 %), puis disparaît. */
+    /* Grand éclair : se dessine de haut en bas (30-30.8 %),
+       faiblit, se rallume avec le 2e flash (33 %), puis disparaît. */
     @keyframes meteo-bolt {
-      0%, 87.9% { opacity: 0; clip-path: inset(0 0 100% 0); }
-      88%       { opacity: 1; clip-path: inset(0 0 100% 0); }
-      89%       { opacity: 1; clip-path: inset(0 0 0 0); }
-      91%       { opacity: 0.2; clip-path: inset(0 0 0 0); }
-      92.5%     { opacity: 1; clip-path: inset(0 0 0 0); }
-      94%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
+      0%, 29.9% { opacity: 0; clip-path: inset(0 0 100% 0); }
+      30%       { opacity: 1; clip-path: inset(0 0 100% 0); }
+      30.8%     { opacity: 1; clip-path: inset(0 0 0 0); }
+      32%       { opacity: 0.15; clip-path: inset(0 0 0 0); }
+      33%       { opacity: 1; clip-path: inset(0 0 0 0); }
+      34.5%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
+    }
+    /* Petit éclair : même principe, sur la 2e salve */
+    @keyframes meteo-bolt-2 {
+      0%, 77.9% { opacity: 0; clip-path: inset(0 0 100% 0); }
+      78%       { opacity: 0.85; clip-path: inset(0 0 100% 0); }
+      78.6%     { opacity: 0.85; clip-path: inset(0 0 0 0); }
+      79.5%     { opacity: 0.15; clip-path: inset(0 0 0 0); }
+      80.3%     { opacity: 0.7; clip-path: inset(0 0 0 0); }
+      81.5%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
     }
     @keyframes meteo-givre {
       0%, 100% { box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.12); }
@@ -634,11 +652,12 @@ S_theme:
     {% endif %}
 
     {% if meteo in ['lightning', 'lightning-rainy'] %}
-    /* Orage : éclairs (flash sur toute la card) */
+    /* Orage : flash sur toute la card + éclairs ramifiés */
     :host(.meteo) ha-card {
-      animation: meteo-flash 7s linear infinite;
+      --meteo-eclair: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'><g fill='none' stroke='white' stroke-linejoin='round' stroke-linecap='round'><path stroke-width='2.5' d='M52 0 38 28 47 31 26 60 36 63 8 100'/><path stroke-width='1.2' opacity='0.8' d='M38 28 27 37 24 50M26 60 38 72 41 86'/><path stroke-width='0.8' opacity='0.6' d='M27 37 18 41M38 72 47 76'/></g></svg>");
+      animation: meteo-flash 13s linear infinite;
     }
-    /* L'éclair en zigzag, en diagonale du haut-droit vers le bas-gauche */
+    /* Grand éclair, en diagonale du haut-droit vers le bas-gauche */
     :host(.meteo) ha-card::before {
       content: "";
       position: absolute;
@@ -648,11 +667,30 @@ S_theme:
       right: 12%;
       width: 30%;
       height: 100%;
-      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 100'><polyline points='52,0 38,28 47,31 26,60 36,63 8,100' fill='none' stroke='white' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/></svg>") center / contain no-repeat;
+      background: var(--meteo-eclair) center / contain no-repeat;
       filter: drop-shadow(0 0 4px white) drop-shadow(0 0 10px var(--theme-purple));
       opacity: 0;
-      animation: meteo-bolt 7s linear infinite;
+      animation: meteo-bolt 13s linear infinite;
     }
+    {% if meteo == 'lightning' %}
+    /* Petit éclair à gauche, inversé (sous la pluie, ::after sert aux
+       gouttes : la 2e salve n'est alors qu'un flash lointain) */
+    :host(.meteo) ha-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: 0;
+      left: 8%;
+      width: 20%;
+      height: 70%;
+      transform: scaleX(-1);
+      background: var(--meteo-eclair) center / contain no-repeat;
+      filter: drop-shadow(0 0 3px white) drop-shadow(0 0 8px var(--theme-purple));
+      opacity: 0;
+      animation: meteo-bolt-2 13s linear infinite;
+    }
+    {% endif %}
     {% elif meteo_gel %}
     /* Gel (sec, pluie verglaçante ou neige) : bord givré qui respire */
     :host(.meteo) ha-card {
