@@ -453,10 +453,6 @@ S_theme:
       0%, 100% { opacity: 0.2; }
       50%      { opacity: 0.45; }
     }
-    @keyframes meteo-wind {
-      from { transform: translateX(-100%); }
-      to   { transform: translateX(100%); }
-    }
     /* Pluie : chaque plan descend d'exactement une tuile (boucle sans saut).
        Même durée pour les 2, mais le plan proche parcourt 120px et le
        lointain 80px : les gouttes proches tombent donc plus vite. */
@@ -527,6 +523,11 @@ S_theme:
       50%      { opacity: 1; }
       60%      { opacity: 0.45; }
     }
+
+    {# Nuages en SVG, partagés par le couvert et le vent avec nuages
+       (bosses arrondies + dessous ombré). #}
+    {% set meteo_nuages_loin %}url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 460 120'><g fill='white' opacity='0.1'><circle cx='110' cy='45' r='35.2'/><circle cx='71.6' cy='57.8' r='25.6'/><circle cx='150' cy='54.6' r='28.8'/><circle cx='39.6' cy='70.6' r='17.6'/><circle cx='182' cy='69' r='19.2'/><ellipse cx='110' cy='73.8' rx='89.6' ry='17.6'/></g><ellipse cx='110' cy='80.2' rx='80' ry='12.8' fill='%230b1120' opacity='0.15'/><g fill='white' opacity='0.08'><circle cx='340' cy='30' r='28.6'/><circle cx='308.8' cy='40.4' r='20.8'/><circle cx='372.5' cy='37.8' r='23.4'/><circle cx='282.8' cy='50.8' r='14.3'/><circle cx='398.5' cy='49.5' r='15.6'/><ellipse cx='340' cy='53.4' rx='72.8' ry='14.3'/></g><ellipse cx='340' cy='58.6' rx='65' ry='10.4' fill='%230b1120' opacity='0.12'/></svg>"){% endset %}
+    {% set meteo_nuages_proches %}url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 110'><g fill='white' opacity='0.2'><circle cx='80' cy='40' r='22'/><circle cx='56' cy='48' r='16'/><circle cx='105' cy='46' r='18'/><circle cx='36' cy='56' r='11'/><circle cx='125' cy='55' r='12'/><ellipse cx='80' cy='58' rx='56' ry='11'/></g><ellipse cx='80' cy='62' rx='50' ry='8' fill='%230b1120' opacity='0.25'/><g fill='white' opacity='0.16'><circle cx='240' cy='62' r='16.5'/><circle cx='222' cy='68' r='12'/><circle cx='258.75' cy='66.5' r='13.5'/><circle cx='207' cy='74' r='8.25'/><circle cx='273.75' cy='73.25' r='9'/><ellipse cx='240' cy='75.5' rx='42' ry='8.25'/></g><ellipse cx='240' cy='78.5' rx='37.5' ry='6' fill='%230b1120' opacity='0.2'/></svg>"){% endset %}
 
     {% if meteo_givre %}
     /* Gel par temps sec : cristaux de glace (❄) FIGÉS sur les bords,
@@ -665,7 +666,7 @@ S_theme:
     :host(.meteo) ha-card::before {
       top: 0;
       height: 120px;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 460 120'><g fill='white' opacity='0.1'><circle cx='110' cy='45' r='35.2'/><circle cx='71.6' cy='57.8' r='25.6'/><circle cx='150' cy='54.6' r='28.8'/><circle cx='39.6' cy='70.6' r='17.6'/><circle cx='182' cy='69' r='19.2'/><ellipse cx='110' cy='73.8' rx='89.6' ry='17.6'/></g><ellipse cx='110' cy='80.2' rx='80' ry='12.8' fill='%230b1120' opacity='0.15'/><g fill='white' opacity='0.08'><circle cx='340' cy='30' r='28.6'/><circle cx='308.8' cy='40.4' r='20.8'/><circle cx='372.5' cy='37.8' r='23.4'/><circle cx='282.8' cy='50.8' r='14.3'/><circle cx='398.5' cy='49.5' r='15.6'/><ellipse cx='340' cy='53.4' rx='72.8' ry='14.3'/></g><ellipse cx='340' cy='58.6' rx='65' ry='10.4' fill='%230b1120' opacity='0.12'/></svg>");
+      background-image: {{ meteo_nuages_loin }};
       background-size: 460px 120px;
       filter: blur(5px);
       animation: meteo-nuages-loin 120s linear infinite;
@@ -673,7 +674,7 @@ S_theme:
     :host(.meteo) ha-card::after {
       top: 25px;
       height: 110px;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 110'><g fill='white' opacity='0.2'><circle cx='80' cy='40' r='22'/><circle cx='56' cy='48' r='16'/><circle cx='105' cy='46' r='18'/><circle cx='36' cy='56' r='11'/><circle cx='125' cy='55' r='12'/><ellipse cx='80' cy='58' rx='56' ry='11'/></g><ellipse cx='80' cy='62' rx='50' ry='8' fill='%230b1120' opacity='0.25'/><g fill='white' opacity='0.16'><circle cx='240' cy='62' r='16.5'/><circle cx='222' cy='68' r='12'/><circle cx='258.75' cy='66.5' r='13.5'/><circle cx='207' cy='74' r='8.25'/><circle cx='273.75' cy='73.25' r='9'/><ellipse cx='240' cy='75.5' rx='42' ry='8.25'/></g><ellipse cx='240' cy='78.5' rx='37.5' ry='6' fill='%230b1120' opacity='0.2'/></svg>");
+      background-image: {{ meteo_nuages_proches }};
       background-size: 320px 110px;
       filter: blur(1.5px);
       animation: meteo-nuages-proches 55s linear infinite;
@@ -708,18 +709,42 @@ S_theme:
         meteo-brume 10s ease-in-out infinite;
     }
     {% elif meteo in ['windy', 'windy-variant'] %}
-    /* Vent : rafales */
+    /* Vent : filets d'air fins et translucides (estompés aux 2 bouts,
+       légèrement floutés, comme une traînée de mouvement) qui filent à
+       des moments décalés, + feuilles qui traversent en tournoyant.
+       Animations SMIL internes au SVG. */
     :host(.meteo) ha-card::after {
       content: "";
       position: absolute;
       z-index: -1;
       pointer-events: none;
       inset: 0;
-      background:
-        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent) 10% 25% / 45% 2px no-repeat,
-        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent) 60% 50% / 35% 1px no-repeat,
-        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.30), transparent) 25% 75% / 40% 2px no-repeat;
-      animation: meteo-wind 2.5s linear infinite;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='v'><stop offset='0' stop-color='white' stop-opacity='0'/><stop offset='0.6' stop-color='white'/><stop offset='1' stop-color='white' stop-opacity='0'/></linearGradient></defs><g fill='none' stroke='url(%23v)' stroke-linecap='round'><path d='M0 0q80 -5 160 0' stroke-width='1.2' opacity='0.35'><animateTransform attributeName='transform' type='translate' values='-160 70;420 64;420 64' keyTimes='0;0.4;1' dur='3.2s' begin='0s' repeatCount='indefinite'/></path><path d='M0 0q55 -5 110 0' stroke-width='0.8' opacity='0.25'><animateTransform attributeName='transform' type='translate' values='-110 85;420 79;420 79' keyTimes='0;0.4;1' dur='3.2s' begin='0.15s' repeatCount='indefinite'/></path><path d='M0 0q95 -5 190 0' stroke-width='1.4' opacity='0.3'><animateTransform attributeName='transform' type='translate' values='-190 100;420 94;420 94' keyTimes='0;0.4;1' dur='4s' begin='1.2s' repeatCount='indefinite'/></path><path d='M0 0q45 -5 90 0' stroke-width='0.7' opacity='0.2'><animateTransform attributeName='transform' type='translate' values='-90 120;420 114;420 114' keyTimes='0;0.4;1' dur='4s' begin='1.4s' repeatCount='indefinite'/></path><path d='M0 0q65 -5 130 0' stroke-width='0.9' opacity='0.22'><animateTransform attributeName='transform' type='translate' values='-130 55;420 49;420 49' keyTimes='0;0.4;1' dur='4.6s' begin='2.3s' repeatCount='indefinite'/></path><path d='M0 0q85 -5 170 0' stroke-width='1.1' opacity='0.28'><animateTransform attributeName='transform' type='translate' values='-170 135;420 129;420 129' keyTimes='0;0.4;1' dur='3.6s' begin='2.6s' repeatCount='indefinite'/></path><path d='M0 0q40 -5 80 0' stroke-width='0.6' opacity='0.18'><animateTransform attributeName='transform' type='translate' values='-80 95;420 89;420 89' keyTimes='0;0.4;1' dur='5s' begin='3.4s' repeatCount='indefinite'/></path><path d='M0 0q60 -5 120 0' stroke-width='0.8' opacity='0.2'><animateTransform attributeName='transform' type='translate' values='-120 150;420 144;420 144' keyTimes='0;0.4;1' dur='5s' begin='0.7s' repeatCount='indefinite'/></path><path d='M0 0q50 -5 100 0' stroke-width='0.7' opacity='0.16'><animateTransform attributeName='transform' type='translate' values='-100 40;420 34;420 34' keyTimes='0;0.4;1' dur='5.5s' begin='4s' repeatCount='indefinite'/></path></g><g opacity='0'><animate attributeName='opacity' values='0;1;1;0;0' keyTimes='0;0.05;0.45;0.5;1' dur='7s' begin='0.5s' repeatCount='indefinite'/><animateMotion path='M-20 80C80 40 160 120 250 70S360 60 430 90' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='linear' dur='7s' begin='0.5s' repeatCount='indefinite'/><path d='M-8 0Q0-7 8 0Q0 7-8 0z' fill='%23f59e0b'><animateTransform attributeName='transform' type='rotate' values='0;360' dur='1.3s' repeatCount='indefinite'/></path></g><g opacity='0'><animate attributeName='opacity' values='0;1;1;0;0' keyTimes='0;0.05;0.45;0.5;1' dur='8s' begin='3.8s' repeatCount='indefinite'/><animateMotion path='M-20 140C90 170 180 100 270 140S370 150 430 120' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='linear' dur='8s' begin='3.8s' repeatCount='indefinite'/><path d='M-8 0Q0-7 8 0Q0 7-8 0z' fill='%2384cc16'><animateTransform attributeName='transform' type='rotate' values='0;360' dur='1.3s' repeatCount='indefinite'/></path></g><g opacity='0'><animate attributeName='opacity' values='0;1;1;0;0' keyTimes='0;0.05;0.45;0.5;1' dur='9s' begin='6s' repeatCount='indefinite'/><animateMotion path='M-20 30C100 60 200 10 300 40S390 30 430 50' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='linear' dur='9s' begin='6s' repeatCount='indefinite'/><path d='M-8 0Q0-7 8 0Q0 7-8 0z' fill='%23d97706'><animateTransform attributeName='transform' type='rotate' values='0;360' dur='1.3s' repeatCount='indefinite'/></path></g></svg>") center / cover no-repeat;
+      filter: blur(0.6px);
+    }
+    {% if meteo == 'windy-variant' %}
+    /* Vent avec nuages : les nuages du couvert, poussés vite par le vent */
+    :host(.meteo) ha-card::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background-image: {{ meteo_nuages_loin }};
+      background-size: 460px 120px;
+      background-repeat: repeat-x;
+      filter: blur(4px);
+      animation: meteo-nuages-loin 25s linear infinite;
+    }
+    {% endif %}
+    @media (prefers-reduced-motion: reduce) {
+      /* SMIL ne s'arrête pas via CSS : on masque rafales et feuilles */
+      :host(.meteo) ha-card::after {
+        display: none;
+      }
     }
     {% endif %}
 
